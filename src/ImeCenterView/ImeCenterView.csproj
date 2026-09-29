@@ -13,6 +13,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- WFO0003 は WinForms アプリ向けの警告。WPF アプリの DPI 設定はマニフェストで行うのが正しいため抑制する -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <!-- LibraryImport のソース生成に必要 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
