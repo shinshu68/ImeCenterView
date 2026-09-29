@@ -26,7 +26,7 @@ IME のオン／オフ切り替え時に、画面中央へ四角い領域と「�
 - [x] ソリューション `ImeCenterView.sln` と WPF プロジェクト `src/ImeCenterView` を作成（`net10.0-windows`、`UseWPF`・`UseWindowsForms` 有効、`Nullable` 有効）
 - [ ] xUnit テストプロジェクト `tests/ImeCenterView.Tests` を作成し、ソリューションに追加
 - [ ] `app.manifest` を追加し、Per-Monitor V2 の DPI 対応を宣言
-- [ ] `.gitignore` を追加（`dotnet new gitignore` で生成）
+- [x] `.gitignore` を追加（`dotnet new gitignore` で生成）
 - [ ] VS Code 用に `.vscode/launch.json`（デバッグ実行）と `.vscode/tasks.json`（ビルド）を作成
 - [ ] `App.xaml` から `StartupUri` を外し、`ShutdownMode="OnExplicitShutdown"` にする
 - [ ] Debug ビルド専用の `Diagnostics/ResourceMonitor` を作成：10 秒ごとにハンドル数・GDI オブジェクト数・USER オブジェクト数・プライベートメモリをログ出力（`Debug.WriteLine` と `%APPDATA%\ImeCenterView\logs\`）
