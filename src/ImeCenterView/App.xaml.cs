@@ -1,13 +1,10 @@
-﻿using System.Configuration;
-using System.Data;
 using System.Windows;
 
 namespace ImeCenterView;
 
 /// <summary>
-/// Interaction logic for App.xaml
+/// アプリケーションのエントリポイント。メインウィンドウを持たずに常駐する。
 /// </summary>
 public partial class App : Application
 {
 }
-
