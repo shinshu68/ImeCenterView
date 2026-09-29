@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ImeCenterView (Debug)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/ImeCenterView/bin/Debug/net10.0-windows/ImeCenterView.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/ImeCenterView",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}
