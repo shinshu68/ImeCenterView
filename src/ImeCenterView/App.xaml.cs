@@ -1,6 +1,7 @@
 using System.Windows;
 #if DEBUG
 using ImeCenterView.Diagnostics;
+using ImeCenterView.Ime;
 #endif
 
 namespace ImeCenterView;
@@ -12,6 +13,7 @@ public partial class App : Application
 {
 #if DEBUG
     private ResourceMonitor? _resourceMonitor;
+    private ImeStateLogger? _imeStateLogger;
 #endif
 
     /// <inheritdoc />
@@ -22,6 +24,9 @@ public partial class App : Application
 #if DEBUG
         _resourceMonitor = new ResourceMonitor(TimeSpan.FromSeconds(10));
         _resourceMonitor.Start();
+
+        _imeStateLogger = new ImeStateLogger(new ImeStateReader());
+        _imeStateLogger.Start();
 #endif
     }
 
@@ -29,6 +34,10 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
 #if DEBUG
+        // タイマー停止を先に行い、その後に診断ログを止める
+        _imeStateLogger?.Dispose();
+        _imeStateLogger = null;
+
         _resourceMonitor?.Dispose();
         _resourceMonitor = null;
 #endif

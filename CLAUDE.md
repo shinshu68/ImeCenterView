@@ -135,6 +135,7 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 **毎周期・毎表示で new しない**
 
 - ポーリング処理（100ms ごと）の中で、オブジェクト・配列・文字列・デリゲート（ラムダ）を生成しない。構造体と使い回しのバッファで完結させる
+  - ただし `DispatcherTimer` 自体が tick ごとに内部で約 500 バイトを確保する（フェーズ 1 で計測）。これは GC で回収される短命なオブジェクトでリークではないため、許容する。自分で書くコードの中で確保しないことを守る
 - `DispatcherTimer`、`Storyboard` / `DoubleAnimation`、`Brush`、`OverlayWindow` はすべて起動時に 1 回だけ生成して使い回す
 - 生成して使い回す `Brush` などの Freezable は `Freeze()` する
 
