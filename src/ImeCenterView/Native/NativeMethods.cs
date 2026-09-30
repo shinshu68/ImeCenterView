@@ -111,6 +111,88 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
     internal static partial int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+    /// <summary><see cref="MonitorFromWindow"/> などで、該当するモニターがなければプライマリモニターを返すフラグ。</summary>
+    internal const uint MONITOR_DEFAULTTOPRIMARY = 0x00000001;
+
+    /// <summary><see cref="MonitorFromWindow"/> で、ウィンドウがどのモニターにも重ならなければ最も近いモニターを返すフラグ。</summary>
+    internal const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
+
+    /// <summary><see cref="GetDpiForMonitor"/> で、拡大率の設定を反映した実効 DPI を取得する種別。</summary>
+    internal const int MDT_EFFECTIVE_DPI = 0;
+
+    /// <summary><see cref="SetWindowPos"/> で、ウィンドウを最前面ウィンドウの一番上に置く指定。</summary>
+    internal static readonly IntPtr HWND_TOPMOST = new(-1);
+
+    /// <summary><see cref="SetWindowPos"/> のフラグ。ウィンドウをアクティブにしない。</summary>
+    internal const uint SWP_NOACTIVATE = 0x0010;
+
+    /// <summary>
+    /// ウィンドウが最も大きく重なっているモニターのハンドルを取得する。
+    /// HMONITOR は解放の必要がない（解放する API もない）。取得できない場合は <see cref="IntPtr.Zero"/>。
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    internal static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+    /// <summary>
+    /// 指定した点を含むモニターのハンドルを取得する。
+    /// HMONITOR は解放の必要がない（解放する API もない）。取得できない場合は <see cref="IntPtr.Zero"/>。
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    internal static partial IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+    /// <summary>
+    /// モニターの矩形（物理ピクセル）を取得する。呼び出し前に <see cref="MONITORINFO.cbSize"/> を設定する必要がある。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    /// <summary>
+    /// モニターの DPI を取得する。成功した場合は S_OK（0）を返す。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("shcore.dll")]
+    internal static partial int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    /// <summary>
+    /// ウィンドウの位置・大きさ・Z オーダーを変更する（座標は物理ピクセル）。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    /// <summary>
+    /// ウィンドウの矩形（物理ピクセル）を取得する。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    /// <summary>
+    /// <see cref="GetMonitorInfo"/> で取得するモニターの情報。
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MONITORINFO
+    {
+        public uint cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    /// <summary>
+    /// 点を表す Win32 の構造体。
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct POINT
+    {
+        public int x;
+        public int y;
+    }
+
     /// <summary>
     /// <see cref="GetGUIThreadInfo"/> で取得するスレッドの GUI 情報。
     /// </summary>
