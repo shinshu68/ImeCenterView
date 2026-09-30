@@ -82,6 +82,35 @@ internal static partial class NativeMethods
         uint uTimeout,
         out IntPtr lpdwResult);
 
+    /// <summary><see cref="GetWindowLong"/> / <see cref="SetWindowLong"/> で拡張ウィンドウスタイルを指定するインデックス。</summary>
+    internal const int GWL_EXSTYLE = -20;
+
+    /// <summary>マウス入力を下のウィンドウへ透過させる拡張スタイル（レイヤードウィンドウと組み合わせて使う）。</summary>
+    internal const int WS_EX_TRANSPARENT = 0x00000020;
+
+    /// <summary>タスクバーや Alt+Tab に表示しないツールウィンドウにする拡張スタイル。</summary>
+    internal const int WS_EX_TOOLWINDOW = 0x00000080;
+
+    /// <summary>表示やクリックでアクティブにならないようにする拡張スタイル。</summary>
+    internal const int WS_EX_NOACTIVATE = 0x08000000;
+
+    /// <summary>
+    /// ウィンドウの属性（拡張スタイルなど）を取得する。失敗した場合は 0 を返す。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    /// <remarks>
+    /// 拡張スタイルは 32 ビット値のため、64 ビット環境でも <c>GetWindowLongW</c> で扱える。
+    /// </remarks>
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+    internal static partial int GetWindowLong(IntPtr hWnd, int nIndex);
+
+    /// <summary>
+    /// ウィンドウの属性（拡張スタイルなど）を設定する。変更前の値を返し、失敗した場合は 0 を返す。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+    internal static partial int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
     /// <summary>
     /// <see cref="GetGUIThreadInfo"/> で取得するスレッドの GUI 情報。
     /// </summary>

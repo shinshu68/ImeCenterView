@@ -104,15 +104,15 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 - **絶対にフォーカスを奪わないこと**。入力中のアプリからフォーカスが外れると致命的な不具合になる
 - ウィンドウは 1 つだけ生成して使い回す（表示のたびに new しない）
 - 表示中に再度切り替わった場合は、文字を差し替えてタイマーとアニメーションをリセットする
-- 位置はアクティブウィンドウがあるモニターの作業領域（`MonitorFromWindow` + `GetMonitorInfo` の `rcWork`）の中央。DPI の混在に備え、座標計算は物理ピクセルで行い `SetWindowPos`（`SWP_NOACTIVATE`）で配置する
+- 位置はアクティブウィンドウがあるモニター全体（`MonitorFromWindow` + `GetMonitorInfo` の `rcMonitor`、タスクバーを含む）の中央（以前の Microsoft IME と同じ）。DPI の混在に備え、座標計算は物理ピクセルで行い `SetWindowPos`（`SWP_NOACTIVATE`）で配置する
 
 ### 表示仕様（デフォルト値）
 
 | 項目 | 値 |
 |---|---|
-| 領域 | 正方形 120×120（DIP）、角丸 12 |
-| 背景 | 黒、不透明度 70% |
-| 文字 | 白、72pt 前後、「あ」または「A」 |
+| 領域 | 正方形 162×162（DIP）、角丸なし |
+| 背景 | グレー `#2F2F2F`、不透明度 約 85%（`#D82F2F2F`。白の上で 78、暗い灰色 30 の上で 44 になる） |
+| 文字 | グレー `#DEDEDE`（不透明）。「あ」は Yu Gothic UI Regular 126、「A」は Yu Gothic Regular 137（DIP）。インクの下端を領域の下端から 27 にそろえる |
 | 表示時間 | 700ms 表示後、300ms かけてフェードアウト |
 
 ### 常駐・その他
