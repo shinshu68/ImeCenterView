@@ -1,4 +1,8 @@
+#if DEBUG
+using System.Diagnostics;
+#endif
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -79,7 +83,7 @@ public partial class OverlayWindow : Window
     }
 
     /// <summary>
-    /// IME の状態に応じて「あ」または「A」をプライマリモニターの中央に表示する。
+    /// IME の状態に応じて「あ」または「A」を、アクティブウィンドウがあるモニターの中央に表示する。
     /// 表示中に呼ばれた場合は文字を差し替え、表示時間とフェードアウトを最初からやり直す。
     /// </summary>
     /// <param name="state">表示する IME の状態。<see cref="ImeState.Unknown"/> の場合は何もしない。</param>
@@ -97,7 +101,7 @@ public partial class OverlayWindow : Window
         Backdrop.BeginAnimation(OpacityProperty, null);
         Backdrop.BeginAnimation(OpacityProperty, _fadeOut);
 
-        MoveToPrimaryScreenCenter();
+        MoveToActiveMonitorCenter();
 
         if (!IsVisible)
         {
@@ -182,14 +186,61 @@ public partial class OverlayWindow : Window
     private void OnHideTimerTick(object? sender, EventArgs e) => HideNow();
 
     /// <summary>
-    /// プライマリモニター全体（タスクバーを含む）の中央へ移動する。以前の IME もモニター全体の中央に表示していた。
+    /// アクティブウィンドウがあるモニター全体（タスクバーを含む）の中央へ移動し、最前面に置く。
+    /// 以前の IME もモニター全体の中央に表示していた。
     /// </summary>
     /// <remarks>
-    /// マルチモニター・DPI の混在への対応はフェーズ 4 で物理ピクセル基準の配置に置き換える。
+    /// DPI の異なるモニターが混在していても正しく置けるよう、位置と大きさは物理ピクセルで計算して <c>SetWindowPos</c> で設定する。
+    /// 大きさはモニターの DPI に合わせて <see cref="BoxSize"/> を拡大縮小した値にする（中身の拡大縮小は WPF が DPI の変化を受けて行う）。
     /// </remarks>
-    private void MoveToPrimaryScreenCenter()
+    private void MoveToActiveMonitorCenter()
     {
-        Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
-        Top = (SystemParameters.PrimaryScreenHeight - Height) / 2;
+        // HWND・HMONITOR はどちらも借用であり、解放は不要
+        var foreground = NativeMethods.GetForegroundWindow();
+        var monitor = foreground != IntPtr.Zero
+            ? NativeMethods.MonitorFromWindow(foreground, NativeMethods.MONITOR_DEFAULTTONEAREST)
+            : IntPtr.Zero;
+        if (monitor == IntPtr.Zero)
+        {
+            monitor = NativeMethods.MonitorFromPoint(default, NativeMethods.MONITOR_DEFAULTTOPRIMARY);
+        }
+
+        var info = new NativeMethods.MONITORINFO { cbSize = (uint)Marshal.SizeOf<NativeMethods.MONITORINFO>() };
+        if (!NativeMethods.GetMonitorInfo(monitor, ref info))
+        {
+            // モニターの情報が取れなければ、前回の位置のまま表示する
+            return;
+        }
+
+        if (NativeMethods.GetDpiForMonitor(monitor, NativeMethods.MDT_EFFECTIVE_DPI, out var dpi, out _) != 0 || dpi == 0)
+        {
+            dpi = 96;
+        }
+
+        var size = (int)Math.Round(BoxSize * dpi / 96);
+        var rect = info.rcMonitor;
+        var x = rect.left + (rect.right - rect.left - size) / 2;
+        var y = rect.top + (rect.bottom - rect.top - size) / 2;
+
+        var hwnd = new WindowInteropHelper(this).Handle;
+        // DPI の異なるモニターへ移ると、WPF が WM_DPICHANGED を受けて推奨された位置へ動かすことがある。
+        // その場合は 2 回目の呼び出しで（移動後のモニター上なので DPI の変化なしに）目的の位置へ置き直す
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, x, y, size, size, NativeMethods.SWP_NOACTIVATE);
+            if (NativeMethods.GetWindowRect(hwnd, out var actual)
+                && actual.left == x && actual.top == y && actual.right == x + size && actual.bottom == y + size)
+            {
+                break;
+            }
+        }
+
+#if DEBUG
+        NativeMethods.GetWindowRect(hwnd, out var placed);
+        Debug.WriteLine(
+            $"[Overlay] モニター ({rect.left},{rect.top})-({rect.right},{rect.bottom}) DPI {dpi} / "
+            + $"配置 ({placed.left},{placed.top}) {placed.right - placed.left}x{placed.bottom - placed.top} / "
+            + $"WPF の DPI {VisualTreeHelper.GetDpi(this).PixelsPerInchX}");
+#endif
     }
 }

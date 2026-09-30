@@ -96,9 +96,9 @@ IME のオン／オフ切り替え時に、画面中央へ四角い領域と「�
 
 ## フェーズ 4：マルチモニター・DPI 対応
 
-- [ ] `MonitorFromWindow`（`MONITOR_DEFAULTTONEAREST`）でアクティブウィンドウのモニターを取得
-- [ ] `GetMonitorInfo` のモニター全体（`rcMonitor`）の中央に、物理ピクセル基準で `SetWindowPos`（`SWP_NOACTIVATE | SWP_NOZORDER` なし、`HWND_TOPMOST`）で配置
-- [ ] モニターごとの DPI に合わせてサイズを調整
+- [x] `MonitorFromWindow`（`MONITOR_DEFAULTTONEAREST`）でアクティブウィンドウのモニターを取得
+- [x] `GetMonitorInfo` のモニター全体（`rcMonitor`）の中央に、物理ピクセル基準で `SetWindowPos`（`SWP_NOACTIVATE | SWP_NOZORDER` なし、`HWND_TOPMOST`）で配置
+- [x] モニターごとの DPI に合わせてサイズを調整
 
 **完了条件**：DPI（拡大率）が異なる 2 枚のモニターで、アクティブウィンドウのある側の中央に、どちらも同じ見た目の大きさで表示される（環境がなければ、拡大率を変更して 1 枚で確認）
 
