@@ -23,4 +23,9 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- ImeMonitor.Poll などの internal メンバーをテストから呼ぶため -->
+    <InternalsVisibleTo Include="ImeCenterView.Tests" />
+  </ItemGroup>
+
 </Project>

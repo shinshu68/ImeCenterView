@@ -58,14 +58,14 @@ IME のオン／オフ切り替え時に、画面中央へ四角い領域と「�
 
 ## フェーズ 2：変化検知
 
-- [ ] `IForegroundWindowProvider` を定義し、実装を用意
-- [ ] `ImeMonitor` を実装
+- [x] `IForegroundWindowProvider` を定義し、実装を用意
+- [x] `ImeMonitor` を実装
   - `DispatcherTimer` で 100ms ごとにポーリング
   - フォアグラウンドウィンドウが変わったときは状態を記録するだけ
   - 同じウィンドウで On ⇔ Off が変わったときだけ `ImeStateChanged` イベントを発行
   - `Unknown` が絡む変化ではイベントを発行しない
   - `IDisposable` を実装し、`Dispose` でタイマー停止とイベント解除を行う
-- [ ] `ImeMonitorTests` でユニットテストを書く
+- [x] `ImeMonitorTests` でユニットテストを書く
   - 同じウィンドウで Off → On：イベントあり
   - 同じウィンドウで状態変化なし：イベントなし
   - ウィンドウが変わり、同時に状態も変わる：イベントなし
