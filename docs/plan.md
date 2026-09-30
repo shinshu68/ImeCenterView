@@ -37,14 +37,14 @@ IME のオン／オフ切り替え時に、画面中央へ四角い領域と「�
 
 ## フェーズ 1：IME 状態の取得
 
-- [ ] `Native/NativeMethods.cs` に必要な P/Invoke を定義
+- [x] `Native/NativeMethods.cs` に必要な P/Invoke を定義
   - `GetForegroundWindow`, `GetWindowThreadProcessId`, `GetGUIThreadInfo`
   - `ImmGetDefaultIMEWnd`, `SendMessageTimeout`
-- [ ] `ImeState`（`On` / `Off` / `Unknown`）を定義
-- [ ] `IImeStateReader` と `ImeStateReader` を実装（フォーカスウィンドウ優先 → IME ウィンドウ取得 → `IMC_GETOPENSTATUS`）
+- [x] `ImeState`（`On` / `Off` / `Unknown`）を定義
+- [x] `IImeStateReader` と `ImeStateReader` を実装（フォーカスウィンドウ優先 → IME ウィンドウ取得 → `IMC_GETOPENSTATUS`）
   - `ImmGetContext` は使わない（解放漏れの原因になるため）
   - 取得処理の中でヒープ確保を行わない（`GUITHREADINFO` などは構造体で扱う）
-- [ ] 確認用に、状態をデバッグ出力（`Debug.WriteLine`）する仮のタイマーを置く
+- [x] 確認用に、状態をデバッグ出力（`Debug.WriteLine`）する仮のタイマーを置く
 
 **完了条件**：以下のアプリで IME を切り替えたとき、デバッグ出力の On/Off が正しく変わる
 
