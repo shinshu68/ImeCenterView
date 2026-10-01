@@ -58,6 +58,9 @@ src/ImeCenterView/
     OverlayWindow.xaml(.cs) # 画面中央の表示ウィンドウ
   Tray/
     TrayIcon.cs             # タスクトレイアイコンとメニュー
+    StartupRegistration.cs  # スタートアップ登録（HKCU...Run）
+  Resources/
+    tray.ico                # トレイアイコン（埋め込みリソース）
   Settings/
     AppSettings.cs
     SettingsStore.cs        # %APPDATA%\ImeCenterView\settings.json

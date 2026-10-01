@@ -22,6 +22,17 @@
       "cwd": "${workspaceFolder}/src/ImeCenterView",
       "console": "internalConsole",
       "stopAtEntry": false
+    },
+    {
+      "name": "ImeCenterView (Pause stress test)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/ImeCenterView/bin/Debug/net10.0-windows/ImeCenterView.dll",
+      "args": ["--stress-pause"],
+      "cwd": "${workspaceFolder}/src/ImeCenterView",
+      "console": "internalConsole",
+      "stopAtEntry": false
     }
   ]
 }
