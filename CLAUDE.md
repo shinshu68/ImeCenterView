@@ -56,6 +56,7 @@ src/ImeCenterView/
     ImeMonitor.cs           # ポーリングと変化検知
   Overlay/
     OverlayWindow.xaml(.cs) # 画面中央の表示ウィンドウ
+    FullScreenDetector.cs   # フルスクリーンのアプリが実行中かの判定
   Tray/
     TrayIcon.cs             # タスクトレイアイコンとメニュー
     StartupRegistration.cs  # スタートアップ登録（HKCU...Run）
@@ -121,6 +122,8 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 | 表示時間 | 700ms 表示後、300ms かけてフェードアウト |
 
 領域の大きさ・背景の不透明度・表示時間・フェード時間・ポーリング間隔は設定（`AppSettings`）で変更でき、上の表はその既定値。大きさを変えると文字も比例して拡大縮小する。
+
+設定で「フルスクリーンのアプリの実行中は表示しない」を有効にすると（既定は無効）、切り替えを検知したときにフルスクリーンのアプリが実行中なら表示しない。アクティブウィンドウがタイトルバーなし（`WS_CAPTION` なし）でモニター全体を覆っている場合（デスクトップは除く）、または `SHQueryUserNotificationState` が `QUNS_BUSY` / `QUNS_RUNNING_D3D_FULL_SCREEN` を返す場合をフルスクリーンとみなす（後者だけではブラウザーの全画面表示を拾えない）。判定は切り替えを検知したときだけ行い、ポーリングのたびには行わない。
 
 ### 常駐・その他
 

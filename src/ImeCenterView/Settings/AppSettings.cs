@@ -57,6 +57,9 @@ public sealed record AppSettings
     /// <summary>IME 状態を取得する間隔（ミリ秒）。</summary>
     public int PollingIntervalMs { get; init; } = 100;
 
+    /// <summary>フルスクリーンのアプリ（ゲーム、動画の全画面再生など）の実行中は表示しない場合は <see langword="true"/>。</summary>
+    public bool HideWhenFullScreen { get; init; }
+
     /// <summary>
     /// すべての値を許容範囲内に収めた設定を返す。
     /// </summary>

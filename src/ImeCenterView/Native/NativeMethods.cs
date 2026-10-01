@@ -171,6 +171,39 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
+    /// <summary><see cref="SHQueryUserNotificationState"/> の結果。フルスクリーンのアプリが実行中、またはプレゼンテーション設定が有効。</summary>
+    internal const int QUNS_BUSY = 2;
+
+    /// <summary><see cref="SHQueryUserNotificationState"/> の結果。Direct3D の排他フルスクリーンのアプリが実行中。</summary>
+    internal const int QUNS_RUNNING_D3D_FULL_SCREEN = 3;
+
+    /// <summary>
+    /// 通知を出してよい状態かどうか（フルスクリーンのアプリが実行中かなど）を取得する。成功した場合は S_OK（0）を返す。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("shell32.dll")]
+    internal static partial int SHQueryUserNotificationState(out int pquns);
+
+    /// <summary><see cref="GetWindowLong"/> でウィンドウスタイルを指定するインデックス。</summary>
+    internal const int GWL_STYLE = -16;
+
+    /// <summary>タイトルバーを持つウィンドウスタイル（<c>WS_BORDER | WS_DLGFRAME</c>）。</summary>
+    internal const int WS_CAPTION = 0x00C00000;
+
+    /// <summary>
+    /// シェルのデスクトップウィンドウ（Progman）のハンドルを取得する。
+    /// 返る HWND は借用であり、解放は不要。シェルが動いていない場合は <see cref="IntPtr.Zero"/>。
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    internal static partial IntPtr GetShellWindow();
+
+    /// <summary>
+    /// ウィンドウのクラス名を呼び出し側のバッファーへ書き込み、書き込んだ文字数を返す。失敗した場合は 0 を返す。
+    /// 解放が必要なリソースは生成しない。
+    /// </summary>
+    [LibraryImport("user32.dll", EntryPoint = "GetClassNameW")]
+    internal static unsafe partial int GetClassName(IntPtr hWnd, char* lpClassName, int nMaxCount);
+
     /// <summary>
     /// <see cref="GetMonitorInfo"/> で取得するモニターの情報。
     /// </summary>

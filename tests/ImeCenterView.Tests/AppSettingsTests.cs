@@ -14,6 +14,7 @@ public sealed class AppSettingsTests
         Assert.Equal(162, settings.Size);
         Assert.Equal(85, settings.BackgroundOpacityPercent);
         Assert.Equal(100, settings.PollingIntervalMs);
+        Assert.False(settings.HideWhenFullScreen);
     }
 
     [Fact]
@@ -32,6 +33,7 @@ public sealed class AppSettingsTests
             Size = 200,
             BackgroundOpacityPercent = 100,
             PollingIntervalMs = 50,
+            HideWhenFullScreen = true,
         };
 
         Assert.Equal(settings, settings.Normalize());
