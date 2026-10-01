@@ -23,6 +23,12 @@ internal sealed class StressTest
     /// <summary>自然に消えるのを待つ時間（表示 700ms + フェード 300ms に余裕を持たせる）。</summary>
     private static readonly TimeSpan NaturalWait = TimeSpan.FromMilliseconds(1200);
 
+    /// <summary>一時停止 → 再開を繰り返す回数。</summary>
+    private const int PauseIterations = 100;
+
+    /// <summary>一時停止・再開のそれぞれの後に待つ時間（ポーリング 100ms が数回走る長さ）。</summary>
+    private static readonly TimeSpan PauseWait = TimeSpan.FromMilliseconds(300);
+
     private readonly OverlayWindow _overlay;
     private readonly string _logFilePath;
 
@@ -83,6 +89,40 @@ internal sealed class StressTest
         stopwatch.Stop();
         var after = ResourceSnapshot.CaptureAfterGc();
         Log($"終了 after:  {after}");
+        LogDifference(before, after, stopwatch.Elapsed);
+    }
+
+    /// <summary>
+    /// 一時停止と再開を繰り返し、前後のリソース使用量を比較する。UI スレッドから呼び出す。
+    /// </summary>
+    /// <param name="togglePause">一時停止と再開を切り替える処理（トレイメニューから呼ばれるものと同じ）。</param>
+    /// <returns>完了を表すタスク。</returns>
+    public async Task RunPauseAsync(Action togglePause)
+    {
+        // 起動直後の初期化が落ち着いてから計測する
+        await Task.Delay(NaturalWait);
+
+        var before = ResourceSnapshot.CaptureAfterGc();
+        Log($"開始（一時停止／再開） before: {before}");
+        var stopwatch = Stopwatch.StartNew();
+
+        // 一時停止 → 再開を 1 回として繰り返す。再開後はポーリングが数回走るだけ待つ
+        for (var i = 0; i < PauseIterations; i++)
+        {
+            togglePause();
+            await Task.Delay(PauseWait);
+            togglePause();
+            await Task.Delay(PauseWait);
+        }
+
+        stopwatch.Stop();
+        var after = ResourceSnapshot.CaptureAfterGc();
+        Log($"終了（一時停止／再開 {PauseIterations} 回） after:  {after}");
+        LogDifference(before, after, stopwatch.Elapsed);
+    }
+
+    private void LogDifference(ResourceSnapshot before, ResourceSnapshot after, TimeSpan elapsed)
+    {
         Log(string.Create(
             CultureInfo.InvariantCulture,
             $"差分 handles={after.Handles - before.Handles:+#;-#;0} " +
@@ -90,7 +130,7 @@ internal sealed class StressTest
             $"user={(long)after.UserObjects - before.UserObjects:+#;-#;0} " +
             $"private={(after.PrivateBytes - before.PrivateBytes) / 1024.0 / 1024.0:+0.0;-0.0;0.0}MB " +
             $"managed={(after.ManagedBytes - before.ManagedBytes) / 1024.0 / 1024.0:+0.0;-0.0;0.0}MB " +
-            $"（{stopwatch.Elapsed.TotalSeconds:F1} 秒）"));
+            $"（{elapsed.TotalSeconds:F1} 秒）"));
     }
 
     private void Log(string message)

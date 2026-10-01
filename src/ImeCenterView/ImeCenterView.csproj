@@ -24,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- トレイアイコン。Bitmap.GetHicon を使わずに済むよう、.ico を埋め込みリソースにして読み込む -->
+    <EmbeddedResource Include="Resources\tray.ico" LogicalName="ImeCenterView.Resources.tray.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- ImeMonitor.Poll などの internal メンバーをテストから呼ぶため -->
     <InternalsVisibleTo Include="ImeCenterView.Tests" />
   </ItemGroup>
