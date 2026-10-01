@@ -46,6 +46,7 @@ public sealed class SettingsStoreTests : IDisposable
             Size = 200,
             BackgroundOpacityPercent = 60,
             PollingIntervalMs = 250,
+            HideWhenFullScreen = true,
         };
 
         Assert.True(_store.Save(settings));

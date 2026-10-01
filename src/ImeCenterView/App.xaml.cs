@@ -157,6 +157,15 @@ public partial class App : Application
 #if DEBUG
         Debug.WriteLine($"[ImeMonitor] {DateTime.Now:HH:mm:ss.fff} ImeStateChanged: {state}");
 #endif
+        // 切り替わったときにだけ判定する（ポーリングのたびには呼ばない）
+        if (_settings.HideWhenFullScreen && FullScreenDetector.IsFullScreenAppRunning())
+        {
+#if DEBUG
+            Debug.WriteLine("[ImeMonitor] フルスクリーンのアプリが実行中のため表示しない");
+#endif
+            return;
+        }
+
         _overlay?.Show(state);
     }
 

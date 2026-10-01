@@ -63,6 +63,7 @@ public partial class SettingsWindow : Window
         SizeSlider.Value = settings.Size;
         OpacitySlider.Value = settings.BackgroundOpacityPercent;
         PollingSlider.Value = settings.PollingIntervalMs;
+        HideWhenFullScreenCheck.IsChecked = settings.HideWhenFullScreen;
         _updating = false;
 
         UpdateTexts();
@@ -75,6 +76,7 @@ public partial class SettingsWindow : Window
         Size = (int)SizeSlider.Value,
         BackgroundOpacityPercent = (int)OpacitySlider.Value,
         PollingIntervalMs = (int)PollingSlider.Value,
+        HideWhenFullScreen = HideWhenFullScreenCheck.IsChecked == true,
     }.Normalize();
 
     private void UpdateTexts()
@@ -94,6 +96,16 @@ public partial class SettingsWindow : Window
         }
 
         UpdateTexts();
+        SettingsChanged?.Invoke(this, GetValues());
+    }
+
+    private void OnCheckChanged(object sender, RoutedEventArgs e)
+    {
+        if (_updating)
+        {
+            return;
+        }
+
         SettingsChanged?.Invoke(this, GetValues());
     }
 
