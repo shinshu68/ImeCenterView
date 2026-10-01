@@ -1,6 +1,7 @@
 using System.Windows;
 using ImeCenterView.Ime;
 using ImeCenterView.Overlay;
+using ImeCenterView.Settings;
 using ImeCenterView.Tray;
 #if DEBUG
 using System.Diagnostics;
@@ -14,8 +15,6 @@ namespace ImeCenterView;
 /// </summary>
 public partial class App : Application
 {
-    private static readonly TimeSpan PollingInterval = TimeSpan.FromMilliseconds(100);
-
     /// <summary>二重起動防止に使う Mutex の名前。同じサインインセッション内で一意にする。</summary>
     private const string SingleInstanceMutexName = @"Local\ImeCenterView.SingleInstance";
 
@@ -32,6 +31,10 @@ public partial class App : Application
     private OverlayWindow? _overlay;
     private ImeMonitor? _imeMonitor;
     private TrayIcon? _trayIcon;
+    private SettingsStore? _settingsStore;
+    private AppSettings _settings = AppSettings.Default;
+    private bool _settingsDirty;
+    private SettingsWindow? _settingsWindow;
     private bool _paused;
 #if DEBUG
     private ResourceMonitor? _resourceMonitor;
@@ -55,26 +58,43 @@ public partial class App : Application
         _resourceMonitor.Start();
 #endif
 
-        // オーバーレイは起動時に 1 つだけ生成し、表示のたびに使い回す
-        _overlay = new OverlayWindow();
+        // 設定ファイルがない・壊れている場合は既定値が返る
+        _settingsStore = new SettingsStore();
+        _settings = _settingsStore.Load();
+#if DEBUG
+        var stressTest = e.Args.Contains(StressTestArgument);
+        var pauseStressTest = e.Args.Contains(PauseStressTestArgument);
+        if (stressTest || pauseStressTest)
+        {
+            // ストレステストは既定の表示時間・ポーリング間隔を前提に待ち時間を決めている
+            _settings = AppSettings.Default;
+        }
+#endif
 
-        _imeMonitor = new ImeMonitor(new ForegroundWindowProvider(), new ImeStateReader(), PollingInterval);
+        // オーバーレイは起動時に 1 つだけ生成し、表示のたびに使い回す
+        _overlay = new OverlayWindow(_settings);
+
+        _imeMonitor = new ImeMonitor(
+            new ForegroundWindowProvider(),
+            new ImeStateReader(),
+            TimeSpan.FromMilliseconds(_settings.PollingIntervalMs));
         // ハンドラは起動時に 1 回だけ登録する
         _imeMonitor.ImeStateChanged += OnImeStateChanged;
         _imeMonitor.Start();
 
         _trayIcon = new TrayIcon();
         _trayIcon.PauseToggleRequested += OnPauseToggleRequested;
+        _trayIcon.SettingsRequested += OnSettingsRequested;
         _trayIcon.StartupToggleRequested += OnStartupToggleRequested;
         _trayIcon.ExitRequested += OnExitRequested;
         _trayIcon.SetStartupRegistered(StartupRegistration.IsRegistered());
 
 #if DEBUG
-        if (e.Args.Contains(StressTestArgument))
+        if (stressTest)
         {
             _ = RunStressTestAsync(new StressTest(_overlay).RunAsync());
         }
-        else if (e.Args.Contains(PauseStressTestArgument))
+        else if (pauseStressTest)
         {
             _ = RunStressTestAsync(new StressTest(_overlay).RunPauseAsync(TogglePause));
         }
@@ -93,7 +113,10 @@ public partial class App : Application
             _imeMonitor = null;
         }
 
-        // Shutdown で閉じられていれば何もしない（閉じた後に Close を呼んでも例外にはならない）
+        // Shutdown で閉じられていれば何もしない（閉じた後に Close を呼んでも例外にはならない）。
+        // 設定ウィンドウは閉じたときに OnSettingsWindowClosed で購読を解除し、設定を保存する
+        _settingsWindow?.Close();
+        SaveSettingsIfDirty();
         _overlay?.Close();
         _overlay = null;
 
@@ -101,6 +124,7 @@ public partial class App : Application
         if (_trayIcon is not null)
         {
             _trayIcon.PauseToggleRequested -= OnPauseToggleRequested;
+            _trayIcon.SettingsRequested -= OnSettingsRequested;
             _trayIcon.StartupToggleRequested -= OnStartupToggleRequested;
             _trayIcon.ExitRequested -= OnExitRequested;
             _trayIcon.Dispose();
@@ -154,6 +178,78 @@ public partial class App : Application
     }
 
     private void OnExitRequested(object? sender, EventArgs e) => Shutdown();
+
+    private void OnSettingsRequested(object? sender, EventArgs e)
+    {
+        // すでに開いていれば、新しく作らずに前面へ出す
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        // 開くたびに生成し、閉じたとき（OnSettingsWindowClosed）に購読を解除して手放す
+        _settingsWindow = new SettingsWindow(_settings);
+        _settingsWindow.SettingsChanged += OnSettingsChanged;
+        _settingsWindow.Closed += OnSettingsWindowClosed;
+        _settingsWindow.Show();
+        _settingsWindow.Activate();
+    }
+
+    private void OnSettingsChanged(object? sender, AppSettings settings)
+    {
+        if (settings == _settings)
+        {
+            return;
+        }
+
+        // 見た目に関わる項目が変わったときだけ、確認用に表示する
+        var appearanceChanged = settings.HoldDurationMs != _settings.HoldDurationMs
+            || settings.FadeDurationMs != _settings.FadeDurationMs
+            || settings.Size != _settings.Size
+            || settings.BackgroundOpacityPercent != _settings.BackgroundOpacityPercent;
+
+        _settings = settings;
+        // スライダーを動かしている間は何度も呼ばれるため、ファイルへの保存はウィンドウを閉じるときにまとめて行う
+        _settingsDirty = true;
+
+        _overlay?.ApplySettings(settings);
+        if (_imeMonitor is not null)
+        {
+            _imeMonitor.Interval = TimeSpan.FromMilliseconds(settings.PollingIntervalMs);
+        }
+
+        if (appearanceChanged)
+        {
+            _overlay?.Show(ImeState.On);
+        }
+    }
+
+    private void OnSettingsWindowClosed(object? sender, EventArgs e)
+    {
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.SettingsChanged -= OnSettingsChanged;
+            _settingsWindow.Closed -= OnSettingsWindowClosed;
+            _settingsWindow = null;
+        }
+
+        SaveSettingsIfDirty();
+    }
+
+    private void SaveSettingsIfDirty()
+    {
+        if (!_settingsDirty || _settingsStore is null)
+        {
+            return;
+        }
+
+        // 保存に失敗しても動作は続ける（今回の起動中は変更後の設定で動き、次に閉じるときにもう一度保存を試みる）
+        if (_settingsStore.Save(_settings))
+        {
+            _settingsDirty = false;
+        }
+    }
 
     /// <summary>
     /// 一時停止と再開を切り替える。タイマーを止める／動かすだけで、オブジェクトの生成・破棄は行わない。

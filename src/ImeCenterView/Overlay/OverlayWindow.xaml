@@ -15,6 +15,11 @@
         WindowStartupLocation="Manual">
     <!-- ブラシと字形はコードビハインドで Freeze したものを設定する -->
     <Border x:Name="Backdrop">
-        <Path x:Name="Glyph" />
+        <!-- 字形は 162 四方を基準に作ってあり、設定で領域の大きさが変わったら Viewbox が比例して拡大縮小する -->
+        <Viewbox>
+            <Canvas Width="162" Height="162">
+                <Path x:Name="Glyph" />
+            </Canvas>
+        </Viewbox>
     </Border>
 </Window>
