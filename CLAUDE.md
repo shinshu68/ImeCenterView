@@ -61,6 +61,7 @@ src/ImeCenterView/
     StartupRegistration.cs  # スタートアップ登録（HKCU...Run）
   Resources/
     tray.ico                # トレイアイコン（埋め込みリソース）
+    app.ico                 # exe のアイコン（16〜256px。csproj の ApplicationIcon）
   Settings/
     AppSettings.cs
     SettingsStore.cs        # %APPDATA%\ImeCenterView\settings.json

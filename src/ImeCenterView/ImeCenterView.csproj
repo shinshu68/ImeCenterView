@@ -11,6 +11,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <!-- Per-Monitor V2 の DPI 対応を宣言する -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- exe のアイコン。アイコンを指定していないウィンドウ（設定ウィンドウ）にもこれが使われる -->
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <!-- WFO0003 は WinForms アプリ向けの警告。WPF アプリの DPI 設定はマニフェストで行うのが正しいため抑制する -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <!-- LibraryImport のソース生成に必要 -->
