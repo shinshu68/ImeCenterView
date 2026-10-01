@@ -33,6 +33,12 @@ internal static partial class NativeMethods
     /// <summary><see cref="WM_IME_CONTROL"/> で IME のオン／オフ状態を取得するコマンド。</summary>
     internal const nint IMC_GETOPENSTATUS = 0x0005;
 
+    /// <summary><see cref="WM_IME_CONTROL"/> で IME の入力モード（<c>IME_CMODE_*</c> の組み合わせ）を取得するコマンド。</summary>
+    internal const nint IMC_GETCONVERSIONMODE = 0x0001;
+
+    /// <summary>入力モードのフラグ。日本語（ひらがな・カタカナ）を入力するモード。立っていなければ英数。</summary>
+    internal const nint IME_CMODE_NATIVE = 0x0001;
+
     /// <summary>
     /// <see cref="SendMessageTimeout"/> のフラグ。相手のスレッドが応答なし（ハング）と判定されていれば待たずに戻る。
     /// </summary>

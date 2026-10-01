@@ -90,7 +90,10 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 1. `GetForegroundWindow` でアクティブウィンドウを取得する
 2. より正確にするため、`GetWindowThreadProcessId` と `GetGUIThreadInfo` でフォーカスを持つ子ウィンドウ（`hwndFocus`）を取得し、取れればそちらを使う
 3. `ImmGetDefaultIMEWnd` で IME ウィンドウを取得する
-4. `SendMessage(imeWnd, WM_IME_CONTROL (0x0283), IMC_GETOPENSTATUS (0x0005), 0)` の戻り値が 0 以外なら IME オン
+4. `SendMessage(imeWnd, WM_IME_CONTROL (0x0283), IMC_GETOPENSTATUS (0x0005), 0)` の戻り値が 0 なら IME オフ
+5. 0 以外（IME が開いている）なら、`IMC_GETCONVERSIONMODE (0x0001)` で入力モードも取得する。`IME_CMODE_NATIVE (0x0001)` が立っていなければ（英数モード）オフ、立っていればオン。入力モードが取れなければオンとする
+
+5 が必要なのは、未確定の文字があるときに IME をオフにすると、IME は開いたまま入力モードだけが英数に変わるため（タスクバーの表示は「A」になり、確定した時点で閉じる）。開閉だけを見ていると、この切り替えを拾えない。
 
 `ImmGetDefaultIMEWnd` が `IntPtr.Zero` を返した場合や取得に失敗した場合は `ImeState.Unknown` とし、表示は行わない。
 `SendMessage` がハングしないよう、必要に応じて `SendMessageTimeout`（`SMTO_ABORTIFHUNG`）を使う。

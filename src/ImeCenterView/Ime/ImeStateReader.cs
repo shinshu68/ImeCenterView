@@ -5,6 +5,7 @@ namespace ImeCenterView.Ime;
 
 /// <summary>
 /// Win32 API（<c>WM_IME_CONTROL</c> / <c>IMC_GETOPENSTATUS</c>）で IME 状態を取得する。
+/// IME が開いていても、入力モード（<c>IMC_GETCONVERSIONMODE</c>）が英数ならオフとして扱う。
 /// </summary>
 /// <remarks>
 /// 解放漏れの原因になるため <c>ImmGetContext</c> は使わない。
@@ -51,7 +52,28 @@ public sealed class ImeStateReader : IImeStateReader
             return ImeState.Unknown;
         }
 
-        return openStatus != IntPtr.Zero ? ImeState.On : ImeState.Off;
+        if (openStatus == IntPtr.Zero)
+        {
+            return ImeState.Off;
+        }
+
+        // 未確定の文字があるときに IME をオフにすると、IME は開いたまま入力モードだけが英数になる
+        // （タスクバーの表示は「A」になり、確定した時点で閉じる）。これもオフとして扱う。
+        // 入力モードが取れなかった場合は、開いているという結果のとおりオンとする
+        sent = NativeMethods.SendMessageTimeout(
+            imeWindow,
+            NativeMethods.WM_IME_CONTROL,
+            NativeMethods.IMC_GETCONVERSIONMODE,
+            IntPtr.Zero,
+            NativeMethods.SMTO_ABORTIFHUNG,
+            SendMessageTimeoutMilliseconds,
+            out var conversionMode);
+        if (sent != IntPtr.Zero && (conversionMode & NativeMethods.IME_CMODE_NATIVE) == 0)
+        {
+            return ImeState.Off;
+        }
+
+        return ImeState.On;
     }
 
     /// <summary>
