@@ -175,7 +175,7 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 ## 既知の制限
 
 - 管理者権限で動いているウィンドウは、UIPI により通常権限の本アプリから状態を取得できない
-- コンソール系（Windows Terminal 等）、一部の UWP アプリやゲームでは取得できないことがある
+- 一部のコンソール系アプリ、UWP アプリ、ゲームでは取得できないことがある（Windows Terminal では取得でき、正しく表示されることを確認済み）
 - これらは `Unknown` として扱い、誤表示しないことを優先する
 
 ## コーディング規約
