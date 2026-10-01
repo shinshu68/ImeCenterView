@@ -17,6 +17,8 @@
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <!-- LibraryImport のソース生成に必要 -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- デバッグ情報を dll に埋め込み、publish の出力を exe 1 つだけにする -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
