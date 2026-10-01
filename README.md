@@ -110,3 +110,7 @@ dotnet test                              # テスト
 二重起動を防止しているため、すでに ImeCenterView が常駐していると、`dotnet run` で起動したほうはすぐ終了します。先に常駐しているほうを終了してください。
 
 設計や開発の経緯は [docs/plan.md](docs/plan.md) と [CLAUDE.md](CLAUDE.md) にあります。
+
+## ライセンス
+
+[MIT License](LICENSE) です。
