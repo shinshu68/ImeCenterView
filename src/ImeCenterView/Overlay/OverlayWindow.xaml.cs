@@ -10,6 +10,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using ImeCenterView.Ime;
 using ImeCenterView.Native;
+using ImeCenterView.Settings;
 
 namespace ImeCenterView.Overlay;
 
@@ -23,37 +24,33 @@ namespace ImeCenterView.Overlay;
 /// </remarks>
 public partial class OverlayWindow : Window
 {
-    /// <summary>表示領域（正方形）の一辺の長さ（DIP）。XAML の Width / Height と合わせる。</summary>
-    private const double BoxSize = 162;
+    /// <summary>字形を作るときの基準にする表示領域の一辺の長さ（DIP）。XAML の Canvas の Width / Height と合わせる。</summary>
+    private const double BaseBoxSize = 162;
 
-    /// <summary>表示領域の下端から、文字のインクの下端までの余白（DIP）。「あ」と「A」で共通。</summary>
+    /// <summary>表示領域の下端から、文字のインクの下端までの余白（DIP、基準の大きさのとき）。「あ」と「A」で共通。</summary>
     private const double GlyphBottomMargin = 27;
-
-    /// <summary>フェードアウトを始めるまで、不透明のまま表示しておく時間。</summary>
-    private static readonly TimeSpan HoldDuration = TimeSpan.FromMilliseconds(700);
-
-    /// <summary>フェードアウトにかける時間。</summary>
-    private static readonly TimeSpan FadeDuration = TimeSpan.FromMilliseconds(300);
 
     private readonly Geometry _onGlyph;
     private readonly Geometry _offGlyph;
-    private readonly DoubleAnimation _fadeOut;
     private readonly DispatcherTimer _hideTimer;
+
+    // 以下は設定から決まる値。表示のたびではなく、設定が変わったときだけ ApplySettings で作り直す
+    private AppSettings? _settings;
+    private DoubleAnimation _fadeOut = null!;
+    private double _boxSize;
     private bool _closed;
 
     /// <summary>
     /// ウィンドウを初期化し、表示せずにウィンドウハンドルだけを作成する。
     /// </summary>
-    public OverlayWindow()
+    /// <param name="settings">表示に使う設定。</param>
+    public OverlayWindow(AppSettings settings)
     {
         InitializeComponent();
 
-        // 以前の IME の実測値に合わせた色。背景はグレー 47 を約 85% の不透明度で重ねる（白の上で 78、暗い灰色 30 の上で 44）。
+        // 以前の IME の実測値に合わせた色。背景はグレー 47 を、既定では約 85% の不透明度で重ねる（ApplySettings で設定する）。
         // 文字は以前の IME では少し透けていたが（白の上で 228、暗い灰色の上で 216）、背景と別の透け方を再現するのは難しいため、中間の値で不透明にする。
         // 使い回すブラシは Freeze して、変更監視のオーバーヘッドをなくす
-        var background = new SolidColorBrush(Color.FromArgb(0xD8, 0x2F, 0x2F, 0x2F));
-        background.Freeze();
-        Backdrop.Background = background;
         var foreground = new SolidColorBrush(Color.FromRgb(0xDE, 0xDE, 0xDE));
         foreground.Freeze();
         Glyph.Fill = foreground;
@@ -62,24 +59,57 @@ public partial class OverlayWindow : Window
         _onGlyph = CreateGlyph("あ", "Yu Gothic UI", 400, 126);
         _offGlyph = CreateGlyph("A", "Yu Gothic", 400, 137);
 
-        // 表示直後は不透明のまま保持し、HoldDuration 経過後に FadeDuration かけて消す
-        _fadeOut = new DoubleAnimation(1.0, 0.0, new Duration(FadeDuration))
-        {
-            BeginTime = HoldDuration,
-            FillBehavior = FillBehavior.HoldEnd,
-        };
-        _fadeOut.Freeze();
-
         // 非表示にするタイミングはアニメーションの Completed ではなくタイマーで決める。
         // 表示中に再表示したとき、置き換えられた古いアニメーションの完了通知と区別する必要がなくなる
-        _hideTimer = new DispatcherTimer(DispatcherPriority.Normal)
-        {
-            Interval = HoldDuration + FadeDuration,
-        };
+        _hideTimer = new DispatcherTimer(DispatcherPriority.Normal);
         _hideTimer.Tick += OnHideTimerTick;
+
+        ApplySettings(settings);
 
         // 最初の表示より前に拡張スタイルを付与しておくため、ここでハンドルを作成する（OnSourceInitialized が呼ばれる）
         new WindowInteropHelper(this).EnsureHandle();
+    }
+
+    /// <summary>
+    /// 設定（表示時間・フェード時間・大きさ・背景の不透明度）を反映する。次の表示から有効になる。
+    /// 表示中に呼ばれた場合、表示中のものは消さず、古い設定のまま消えていく。
+    /// </summary>
+    /// <remarks>
+    /// ブラシとアニメーションはここで作り直して Freeze し、表示のたびには生成しない。
+    /// </remarks>
+    /// <param name="settings">反映する設定。範囲外の値は許容範囲に収めて使う。</param>
+    public void ApplySettings(AppSettings settings)
+    {
+        settings = settings.Normalize();
+        if (_closed || settings == _settings)
+        {
+            return;
+        }
+
+        _settings = settings;
+
+        var alpha = (byte)Math.Round(255 * settings.BackgroundOpacityPercent / 100.0);
+        var background = new SolidColorBrush(Color.FromArgb(alpha, 0x2F, 0x2F, 0x2F));
+        background.Freeze();
+        Backdrop.Background = background;
+
+        var hold = TimeSpan.FromMilliseconds(settings.HoldDurationMs);
+        var fade = TimeSpan.FromMilliseconds(settings.FadeDurationMs);
+
+        // 表示直後は不透明のまま保持し、hold 経過後に fade かけて消す
+        var fadeOut = new DoubleAnimation(1.0, 0.0, new Duration(fade))
+        {
+            BeginTime = hold,
+            FillBehavior = FillBehavior.HoldEnd,
+        };
+        fadeOut.Freeze();
+        _fadeOut = fadeOut;
+        _hideTimer.Interval = hold + fade;
+
+        // 実際の位置と大きさは、表示のたびにモニターの DPI に合わせて SetWindowPos で設定する
+        _boxSize = settings.Size;
+        Width = _boxSize;
+        Height = _boxSize;
     }
 
     /// <summary>
@@ -175,8 +205,8 @@ public partial class OverlayWindow : Window
 
         var ink = formatted.BuildGeometry(new Point(0, 0)).Bounds;
         var origin = new Point(
-            (BoxSize - formatted.WidthIncludingTrailingWhitespace) / 2,
-            BoxSize - GlyphBottomMargin - ink.Bottom);
+            (BaseBoxSize - formatted.WidthIncludingTrailingWhitespace) / 2,
+            BaseBoxSize - GlyphBottomMargin - ink.Bottom);
 
         var geometry = formatted.BuildGeometry(origin);
         geometry.Freeze();
@@ -191,7 +221,7 @@ public partial class OverlayWindow : Window
     /// </summary>
     /// <remarks>
     /// DPI の異なるモニターが混在していても正しく置けるよう、位置と大きさは物理ピクセルで計算して <c>SetWindowPos</c> で設定する。
-    /// 大きさはモニターの DPI に合わせて <see cref="BoxSize"/> を拡大縮小した値にする（中身の拡大縮小は WPF が DPI の変化を受けて行う）。
+    /// 大きさはモニターの DPI に合わせて、設定の大きさ（DIP）を拡大縮小した値にする（中身の拡大縮小は WPF が DPI の変化を受けて行う）。
     /// </remarks>
     private void MoveToActiveMonitorCenter()
     {
@@ -217,7 +247,7 @@ public partial class OverlayWindow : Window
             dpi = 96;
         }
 
-        var size = (int)Math.Round(BoxSize * dpi / 96);
+        var size = (int)Math.Round(_boxSize * dpi / 96);
         var rect = info.rcMonitor;
         var x = rect.left + (rect.right - rect.left - size) / 2;
         var y = rect.top + (rect.bottom - rect.top - size) / 2;

@@ -64,6 +64,7 @@ src/ImeCenterView/
   Settings/
     AppSettings.cs
     SettingsStore.cs        # %APPDATA%\ImeCenterView\settings.json
+    SettingsWindow.xaml(.cs) # 設定ウィンドウ（トレイメニューから開く）
   Diagnostics/              # Debug ビルド専用
     ResourceMonitor.cs      # ハンドル数・GDI/USER オブジェクト数・メモリの定期ログ
     StressTest.cs           # オーバーレイ連続表示によるリーク検証
@@ -114,9 +115,11 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 | 項目 | 値 |
 |---|---|
 | 領域 | 正方形 162×162（DIP）、角丸なし |
-| 背景 | グレー `#2F2F2F`、不透明度 約 85%（`#D82F2F2F`。白の上で 78、暗い灰色 30 の上で 44 になる） |
+| 背景 | グレー `#2F2F2F`、不透明度 85%（`#D92F2F2F`。白の上で 78、暗い灰色 30 の上で 44 になる） |
 | 文字 | グレー `#DEDEDE`（不透明）。「あ」は Yu Gothic UI Regular 126、「A」は Yu Gothic Regular 137（DIP）。インクの下端を領域の下端から 27 にそろえる |
 | 表示時間 | 700ms 表示後、300ms かけてフェードアウト |
+
+領域の大きさ・背景の不透明度・表示時間・フェード時間・ポーリング間隔は設定（`AppSettings`）で変更でき、上の表はその既定値。大きさを変えると文字も比例して拡大縮小する。
 
 ### 常駐・その他
 
@@ -140,6 +143,7 @@ dotnet publish src/ImeCenterView -c Release -r win-x64 --self-contained false -p
 - ポーリング処理（100ms ごと）の中で、オブジェクト・配列・文字列・デリゲート（ラムダ）を生成しない。構造体と使い回しのバッファで完結させる
   - ただし `DispatcherTimer` 自体が tick ごとに内部で約 500 バイトを確保する（フェーズ 1 で計測）。これは GC で回収される短命なオブジェクトでリークではないため、許容する。自分で書くコードの中で確保しないことを守る
 - `DispatcherTimer`、`Storyboard` / `DoubleAnimation`、`Brush`、`OverlayWindow` はすべて起動時に 1 回だけ生成して使い回す
+  - 設定で変わる `Brush` と `DoubleAnimation` だけは、設定が変わったとき（`OverlayWindow.ApplySettings`）に作り直す。表示のたびには作らない
 - 生成して使い回す `Brush` などの Freezable は `Freeze()` する
 
 **イベント購読**

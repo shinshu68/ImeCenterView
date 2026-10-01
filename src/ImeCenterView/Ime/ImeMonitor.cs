@@ -44,6 +44,15 @@ public sealed class ImeMonitor : IDisposable
     }
 
     /// <summary>
+    /// ポーリング間隔。動作中に変更してもよく、その場合は変更した時点から新しい間隔で数え直す。
+    /// </summary>
+    public TimeSpan Interval
+    {
+        get => _timer.Interval;
+        set => _timer.Interval = value;
+    }
+
+    /// <summary>
     /// ポーリングを開始する。
     /// </summary>
     public void Start()

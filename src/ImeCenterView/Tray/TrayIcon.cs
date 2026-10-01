@@ -27,6 +27,9 @@ public sealed class TrayIcon : IDisposable
     /// <summary>「一時停止」／「再開」が選ばれたときに発生する。</summary>
     public event EventHandler? PauseToggleRequested;
 
+    /// <summary>「設定」が選ばれたときに発生する。</summary>
+    public event EventHandler? SettingsRequested;
+
     /// <summary>「スタートアップに登録」が選ばれたときに発生する。</summary>
     public event EventHandler? StartupToggleRequested;
 
@@ -41,13 +44,13 @@ public sealed class TrayIcon : IDisposable
         _icon = LoadIcon();
 
         _pauseItem = new ToolStripMenuItem("一時停止");
-        // 設定ウィンドウはフェーズ 6 で実装する。それまでは選べないようにしておく
-        _settingsItem = new ToolStripMenuItem("設定") { Enabled = false };
+        _settingsItem = new ToolStripMenuItem("設定");
         _startupItem = new ToolStripMenuItem("スタートアップに登録");
         _exitItem = new ToolStripMenuItem("終了");
 
         // ハンドラは初期化時に 1 回だけ登録し、Dispose で解除する
         _pauseItem.Click += OnPauseClick;
+        _settingsItem.Click += OnSettingsClick;
         _startupItem.Click += OnStartupClick;
         _exitItem.Click += OnExitClick;
 
@@ -106,9 +109,11 @@ public sealed class TrayIcon : IDisposable
         _notifyIcon.Visible = false;
 
         _pauseItem.Click -= OnPauseClick;
+        _settingsItem.Click -= OnSettingsClick;
         _startupItem.Click -= OnStartupClick;
         _exitItem.Click -= OnExitClick;
         PauseToggleRequested = null;
+        SettingsRequested = null;
         StartupToggleRequested = null;
         ExitRequested = null;
 
@@ -135,6 +140,8 @@ public sealed class TrayIcon : IDisposable
     }
 
     private void OnPauseClick(object? sender, EventArgs e) => PauseToggleRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnSettingsClick(object? sender, EventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnStartupClick(object? sender, EventArgs e) => StartupToggleRequested?.Invoke(this, EventArgs.Empty);
 
