@@ -72,6 +72,8 @@ src/ImeCenterView/
     StressTest.cs           # オーバーレイ連続表示によるリーク検証
 tests/ImeCenterView.Tests/
   ImeMonitorTests.cs
+tools/
+  watch-resources.ps1       # 長時間テスト用。常駐中のプロセスのリソース使用量を外から定期的に記録する
 ```
 
 ## よく使うコマンド
