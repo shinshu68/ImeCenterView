@@ -177,7 +177,10 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
-    /// <summary><see cref="SHQueryUserNotificationState"/> の結果。フルスクリーンのアプリが実行中、またはプレゼンテーション設定が有効。</summary>
+    /// <summary>
+    /// <see cref="SHQueryUserNotificationState"/> の結果。フルスクリーンのアプリが実行中。
+    /// プレゼンテーション設定が有効な状態は、Windows 7 以降では別の値（<c>QUNS_PRESENTATION_MODE</c>、4）で返る。
+    /// </summary>
     internal const int QUNS_BUSY = 2;
 
     /// <summary><see cref="SHQueryUserNotificationState"/> の結果。Direct3D の排他フルスクリーンのアプリが実行中。</summary>

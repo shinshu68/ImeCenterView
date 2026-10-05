@@ -81,7 +81,9 @@ public partial class OverlayWindow : Window
     public void ApplySettings(AppSettings settings)
     {
         settings = settings.Normalize();
-        if (_closed || settings == _settings)
+        // ポーリング間隔など、表示に関わらない項目だけが変わった場合は何もしない。
+        // 作り直すと、表示中なら非表示にするタイマーが数え直しになってしまう
+        if (_closed || (_settings is not null && !AffectsAppearance(_settings, settings)))
         {
             return;
         }
@@ -178,6 +180,15 @@ public partial class OverlayWindow : Window
 
         base.OnClosed(e);
     }
+
+    /// <summary>
+    /// 表示に使う項目（表示時間・フェード時間・大きさ・背景の不透明度）のどれかが変わったかを判定する。
+    /// </summary>
+    private static bool AffectsAppearance(AppSettings current, AppSettings next) =>
+        current.HoldDurationMs != next.HoldDurationMs
+        || current.FadeDurationMs != next.FadeDurationMs
+        || current.Size != next.Size
+        || current.BackgroundOpacityPercent != next.BackgroundOpacityPercent;
 
     /// <summary>
     /// 文字を、表示領域内の決まった位置に置いた字形（Freeze 済み）に変換する。
