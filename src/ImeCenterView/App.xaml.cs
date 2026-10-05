@@ -227,13 +227,16 @@ public partial class App : Application
             || settings.FadeDurationMs != _settings.FadeDurationMs
             || settings.Size != _settings.Size
             || settings.BackgroundOpacityPercent != _settings.BackgroundOpacityPercent;
+        var pollingIntervalChanged = settings.PollingIntervalMs != _settings.PollingIntervalMs;
 
         _settings = settings;
         // スライダーを動かしている間は何度も呼ばれるため、ファイルへの保存はウィンドウを閉じるときにまとめて行う
         _settingsDirty = true;
 
         _overlay?.ApplySettings(settings);
-        if (_imeMonitor is not null)
+        // 間隔を設定するとタイマーは数え直しになる。ほかのスライダーを動かし続けている間に
+        // ポーリングが止まらないよう、ポーリング間隔が変わったときだけ設定する
+        if (pollingIntervalChanged && _imeMonitor is not null)
         {
             _imeMonitor.Interval = TimeSpan.FromMilliseconds(settings.PollingIntervalMs);
         }
