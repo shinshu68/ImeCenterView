@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <!-- タスクトレイの NotifyIcon を使うため -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- Per-Monitor V2 の DPI 対応を宣言する -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- exe のアイコン。アイコンを指定していないウィンドウ（設定ウィンドウ）にもこれが使われる -->
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <!-- WFO0003 は WinForms アプリ向けの警告。WPF アプリの DPI 設定はマニフェストで行うのが正しいため抑制する -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <!-- LibraryImport のソース生成に必要 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- デバッグ情報を dll に埋め込み、publish の出力を exe 1 つだけにする -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WPF と型名が衝突する（Application など）ため、WinForms 系の暗黙の using は外す -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- トレイアイコン。Bitmap.GetHicon を使わずに済むよう、.ico を埋め込みリソースにして読み込む -->
+    <EmbeddedResource Include="Resources\tray.ico" LogicalName="ImeCenterView.Resources.tray.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ImeMonitor.Poll などの internal メンバーをテストから呼ぶため -->
+    <InternalsVisibleTo Include="ImeCenterView.Tests" />
+  </ItemGroup>
+
+</Project>
