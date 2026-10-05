@@ -46,7 +46,17 @@ public partial class App : Application
         base.OnStartup(e);
 
         // すでに起動していれば、何も生成せずに終了する（OnExit は呼ばれるが、破棄するものはない）
-        _singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out _ownsMutex);
+        try
+        {
+            _singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out _ownsMutex);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // 管理者として起動したものが常駐していると、その Mutex に通常の権限ではアクセスできない。
+            // これも「すでに起動している」として扱う
+            _ownsMutex = false;
+        }
+
         if (!_ownsMutex)
         {
             Shutdown();
